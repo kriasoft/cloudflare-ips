@@ -36,8 +36,8 @@ app.listen(8080);
 
 ## License
 
-Copyright © 2017-present Kriasoft. This source code is licensed under the MIT license found in the
-[LICENSE.txt][license] file.
+Copyright © 2017-present [Kriasoft][kriasoft]. This source code is licensed under the MIT license
+found in the [LICENSE.txt][license] file.
 
 ---
 Made with ♥ by Konstantin Tarkus ([@koistya](https://twitter.com/koistya), [blog](https://medium.com/@tarkus))
@@ -45,4 +45,5 @@ Made with ♥ by Konstantin Tarkus ([@koistya](https://twitter.com/koistya), [bl
 [cloudflare]: https://www.cloudflare.com/
 [proxy]: https://expressjs.com/en/guide/behind-proxies.html
 [nsk]: https://github.com/kriasoft/nodejs-api-starter
+[kriasoft]: https://www.kriasoft.com/
 [license]: https://github.com/kriasoft/cloudflare-ips/blob/master/LICENSE.txt

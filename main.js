@@ -5,32 +5,65 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
-// https://www.cloudflare.com/ips/
-const ips = [
-  '103.21.244.0/22',
-  '103.22.200.0/22',
-  '103.31.4.0/22',
-  '104.16.0.0/12',
-  '108.162.192.0/18',
-  '131.0.72.0/22',
-  '141.101.64.0/18',
-  '162.158.0.0/15',
-  '172.64.0.0/13',
-  '173.245.48.0/20',
-  '188.114.96.0/20',
-  '190.93.240.0/20',
-  '197.234.240.0/22',
-  '198.41.128.0/17',
-  '2400:cb00::/32',
-  '2405:8100::/32',
-  '2405:b500::/32',
-  '2606:4700::/32',
-  '2803:f800::/32',
-  '2c0f:f248::/32',
-  '2a06:98c0::/29'
-];
+/* ::
+export type default = (err: ?Error, ips: ?Array<string>) => void;
+export type CLOUDFLARE_IPS_V4_URL = string;
+export type CLOUDFLARE_IPS_V6_URL = string;
+*/
 
-module.exports = function cloudflareIPs(cb) {
-  // TODO: Update the list in backround
-  cb(null, ips);
+const fetch = require('./fetch');
+
+const CLOUDFLARE_IPS_V4_URL = 'https://www.cloudflare.com/ips-v4';
+const CLOUDFLARE_IPS_V6_URL = 'https://www.cloudflare.com/ips-v6';
+
+let interval;
+let ips = require('./ips');
+
+function fetchIPs(cb) {
+  const errors = [];
+  let result = [null, null];
+  let count = 0;
+
+  const done = (index, err, data) => {
+    if (err) {
+      errors.push(err);
+    } else {
+      result[index] = data;
+    }
+
+    count += 1;
+
+    if (count === result.length) {
+      if (errors.length) {
+        cb(errors[0]);
+      } else {
+        result = result[0].concat(result[1]);
+        if (
+          ips.length !== result.length ||
+          ips.some((ip, i) => ip !== result[i])
+        ) {
+          cb(null, (ips = result));
+        }
+      }
+    }
+  };
+
+  fetch(CLOUDFLARE_IPS_V4_URL, done.bind(this, 0));
+  fetch(CLOUDFLARE_IPS_V6_URL, done.bind(this, 1));
+}
+
+module.exports = function cloudflareIPs(done, options = {}) {
+  if (interval) {
+    clearInterval(interval);
+  }
+
+  interval = setInterval(() => {
+    fetchIPs(done);
+  }, options.interval || 43200000 /* 12 hours */);
+
+  done(null, ips);
+  fetchIPs(done);
 };
+
+module.exports.CLOUDFLARE_IPS_V4_URL = CLOUDFLARE_IPS_V4_URL;
+module.exports.CLOUDFLARE_IPS_V6_URL = CLOUDFLARE_IPS_V6_URL;
