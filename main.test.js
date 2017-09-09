@@ -21,11 +21,12 @@ test('cloudfalreIPs(done) returns the list if IPs from cache', () => {
       .mockImplementationOnce((err, cb) => cb(null, ['two']))
   );
   const cloudflareIPs = require('./main');
-  const callback = jest.fn();
-  cloudflareIPs(callback);
-  expect(callback.mock.calls.length).toBe(1);
-  expect(callback.mock.calls[0][0]).toBeNull();
-  expect(callback.mock.calls[0][1]).toEqual(['one', 'two']);
+  const onUpdate = jest.fn();
+  const onError = jest.fn();
+  cloudflareIPs(onUpdate, onError);
+  expect(onUpdate.mock.calls.length).toBe(1);
+  expect(onUpdate.mock.calls[0][0]).toEqual(['one', 'two']);
+  expect(onError.mock.calls.length).toBe(0);
 });
 
 test('cloudfalreIPs(done) returns the list if IPs from CloudFlare.com (1)', () => {
@@ -37,13 +38,13 @@ test('cloudfalreIPs(done) returns the list if IPs from CloudFlare.com (1)', () =
       .mockImplementationOnce((err, cb) => cb(null, ['two', 'three']))
   );
   const cloudflareIPs = require('./main');
-  const callback = jest.fn();
-  cloudflareIPs(callback);
-  expect(callback.mock.calls.length).toBe(2);
-  expect(callback.mock.calls[0][0]).toBeNull();
-  expect(callback.mock.calls[0][1]).toEqual(['one', 'two']);
-  expect(callback.mock.calls[1][0]).toBeFalsy();
-  expect(callback.mock.calls[1][1]).toEqual(['one', 'two', 'three']);
+  const onUpdate = jest.fn();
+  const onError = jest.fn();
+  cloudflareIPs(onUpdate, onError);
+  expect(onUpdate.mock.calls.length).toBe(2);
+  expect(onUpdate.mock.calls[0][0]).toEqual(['one', 'two']);
+  expect(onUpdate.mock.calls[1][0]).toEqual(['one', 'two', 'three']);
+  expect(onError.mock.calls.length).toBe(0);
 });
 
 test('cloudfalreIPs(done) returns the list if IPs from CloudFlare.com (2)', () => {
@@ -55,11 +56,11 @@ test('cloudfalreIPs(done) returns the list if IPs from CloudFlare.com (2)', () =
       .mockImplementationOnce((err, cb) => cb(null, ['three']))
   );
   const cloudflareIPs = require('./main');
-  const callback = jest.fn();
-  cloudflareIPs(callback);
-  expect(callback.mock.calls.length).toBe(2);
-  expect(callback.mock.calls[0][0]).toBeNull();
-  expect(callback.mock.calls[0][1]).toEqual(['one', 'two']);
-  expect(callback.mock.calls[1][0]).toBeFalsy();
-  expect(callback.mock.calls[1][1]).toEqual(['one', 'three']);
+  const onUpdate = jest.fn();
+  const onError = jest.fn();
+  cloudflareIPs(onUpdate, onError);
+  expect(onUpdate.mock.calls.length).toBe(2);
+  expect(onUpdate.mock.calls[0][0]).toEqual(['one', 'two']);
+  expect(onUpdate.mock.calls[1][0]).toEqual(['one', 'three']);
+  expect(onError.mock.calls.length).toBe(0);
 });

@@ -6,12 +6,18 @@
  */
 
 /* ::
-export type default = (err: ?Error, ips: ?Array<string>) => void;
+export type default = (
+  onUpdate: (ips: string[]) => void,
+  onError: (err: Error) => void,
+  options: ?{ interval: number }
+);
 export type CLOUDFLARE_IPS_V4_URL = string;
 export type CLOUDFLARE_IPS_V6_URL = string;
 */
 
 const fetch = require('./fetch');
+
+const noop = () => {};
 
 const CLOUDFLARE_IPS_V4_URL = 'https://www.cloudflare.com/ips-v4';
 const CLOUDFLARE_IPS_V6_URL = 'https://www.cloudflare.com/ips-v6';
@@ -19,50 +25,51 @@ const CLOUDFLARE_IPS_V6_URL = 'https://www.cloudflare.com/ips-v6';
 let interval;
 let ips = require('./ips');
 
-function fetchIPs(cb) {
-  const errors = [];
+function fetchIPs(onUpdate, onError) {
   let result = [null, null];
-  let count = 0;
-
   const done = (index, err, data) => {
     if (err) {
-      errors.push(err);
-    } else {
-      result[index] = data;
+      onError(err);
+      return;
     }
 
-    count += 1;
+    result[index] = data;
 
-    if (count === result.length) {
-      if (errors.length) {
-        cb(errors[0]);
-      } else {
-        result = result[0].concat(result[1]);
-        if (
-          ips.length !== result.length ||
-          ips.some((ip, i) => ip !== result[i])
-        ) {
-          cb(null, (ips = result));
-        }
+    if (result.every(x => x !== null)) {
+      result = result[0].concat(result[1]);
+      if (
+        ips.length !== result.length ||
+        ips.some((ip, i) => ip !== result[i])
+      ) {
+        onUpdate((ips = result));
       }
     }
   };
 
-  fetch(CLOUDFLARE_IPS_V4_URL, done.bind(this, 0));
-  fetch(CLOUDFLARE_IPS_V6_URL, done.bind(this, 1));
+  fetch(CLOUDFLARE_IPS_V4_URL, done.bind(undefined, 0));
+  fetch(CLOUDFLARE_IPS_V6_URL, done.bind(undefined, 1));
 }
 
-module.exports = function cloudflareIPs(done, options = {}) {
+module.exports = function cloudflareIPs(onUpdate, onError, options) {
+  if (typeof onError !== 'function') {
+    onError = noop; // eslint-disable-line no-param-reassign
+    options = onError; // eslint-disable-line no-param-reassign
+  }
+
+  if (!options) {
+    options = {}; // eslint-disable-line no-param-reassign
+  }
+
   if (interval) {
     clearInterval(interval);
   }
 
   interval = setInterval(() => {
-    fetchIPs(done);
+    fetchIPs(onUpdate, onError);
   }, options.interval || 43200000 /* 12 hours */);
 
-  done(null, ips);
-  fetchIPs(done);
+  onUpdate(ips);
+  fetchIPs(onUpdate, onError);
 };
 
 module.exports.CLOUDFLARE_IPS_V4_URL = CLOUDFLARE_IPS_V4_URL;

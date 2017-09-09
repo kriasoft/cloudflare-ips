@@ -20,12 +20,25 @@ const cloudflareIPs = require('cloudflare-ips');
 
 const app = express();
 
+cloudflareIPs(
+  ips => app.set('trust proxy', ['loopback', ...ips]),
+  err => console.error(err.stack),
+);
+
 cloudflareIPs((err, ips) => {
   app.set('trust proxy', ['loopback', ...ips]);
 });
 
 app.listen(8080);
 ```
+
+## API
+
+#### `cloudFlareIPs(onUpdate, onError, options)`
+
+* `onUpdate`: `(ips: string[]) => void` — a callback function accepting the list of IPs
+* `onError`: `(err: Error) => void` — a callback that is triggered on error (optional)
+* `options`: `{ inteval: number }` — allows to tweak the default settings (optional)
 
 
 ## Related Projects
